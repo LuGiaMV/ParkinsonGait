@@ -21,7 +21,7 @@ file_count = 1
 kml = Kml()
 linea = kml.newlinestring(name="Ruta GPS")
 
-repo_path = "/home/user/Desktop/data_logger_NANOs_GPS/ParkinsonGait"          # Cambia esta ruta por el repositorio clonado localmente
+repo_path = "/home/user/Desktop/ParkinsonGait"          # Cambia esta ruta por el repositorio clonado localmente
 subfolder_name = time.strftime("%Y-%m-%d")                      # Carpeta con la fecha actual
 # Nombre base de los archivos y encabezados de columnas
 baseFileName_arduino = time.strftime("%Y-%m-%d_%H-%M-%S_arduino")
