@@ -2,8 +2,8 @@ import serial
 import time
 import csv
 import os
+import subprocess
 from simplekml import Kml
-from upload import guardar
 
 # Configuración de puertos y tasas de baudios
 gps_port = "/dev/ttyACM0"  # Puerto serial del GPS
@@ -23,10 +23,11 @@ linea = kml.newlinestring(name="Ruta GPS")
 
 repo_path = "/home/user/Desktop/ParkinsonGait"          # Cambia esta ruta por el repositorio clonado localmente
 subfolder_name = time.strftime("Marcha %Y-%m-%d")                      # Carpeta con la fecha actual
+output_folder = os.path.join(repo_path, subfolder_name)
 # Nombre base de los archivos y encabezados de columnas
-baseFileName_arduino = time.strftime("%Y-%m-%d_%H-%M-%S_arduino")
-fileName_gps = time.strftime("%Y-%m-%d_%H-%M-%S_gps.csv")
-fileName_kml = time.strftime("%Y-%m-%d_%H-%M-%S.kml")
+baseFileName_arduino = os.path.join(output_folder, time.strftime("%Y-%m-%d_%H-%M-%S_arduino"))
+fileName_gps = os.path.join(output_folder, time.strftime("%Y-%m-%d_%H-%M-%S_gps.csv"))
+fileName_kml = os.path.join(output_folder, time.strftime("%Y-%m-%d_%H-%M-%S.kml"))
 labels_arduino = ["Timestamp", "xAcel_L", "yAcel_L", "zAcel_L", "xGyro_L", "yGyro_L", "zGyro_L",
                   "xMag_L", "yMag_L", "zMag_L", "xAcel_R", "yAcel_R", "zAcel_R",
                   "xGyro_R", "yGyro_R", "zGyro_R", "xMag_R", "yMag_R", "zMag_R"]
@@ -58,6 +59,19 @@ def save_kml(coords):
     linea.style.linestyle.width = 5
     print(f"Archivo KML guardado como {fileName_kml}.KML") 
 
+def push_Git():
+    
+    # Mover los archivos generados al repositorio
+    try:
+        os.chdir(repo_path)
+        # Ejecutar comandos de Git para agregar, confirmar y enviar los cambios
+        subprocess.run(["git", "add", "."], check=True)
+        commit_message = f"Datos generados el {time.strftime('%Y-%m-%d %H:%M:%S')}"
+        subprocess.run(["git", "commit", "-m", commit_message], check=True)
+        subprocess.run(["git", "push", "origin", "main"], check=True)  # Cambia "main" por tu rama principal si es diferente
+        print("Archivos subidos exitosamente a GitHub.")
+    except Exception as e:
+        print(f"Error al subir los archivos a GitHub: {e}")
 # Conectar al Arduino
 try:
     ser_arduino = serial.Serial(arduino_port, baud_rate_arduino, timeout=1)
@@ -82,6 +96,10 @@ gps_data = {"Time": "", "lat_format": "", "long_format": "", "fix_status": ""}
 #     file_count_arduino += 1
 # while os.path.exists(f"{baseFileName_gps}_{file_count}.csv"):
 #     file_count += 1
+
+# Crear la carpeta dentro del repositorio local
+if not os.path.exists(subfolder_name):
+    os.makedirs(subfolder_name)
 
 try:
     with open(fileName_gps, 'w', newline='') as csvfile_gps:
@@ -147,13 +165,12 @@ except Exception as e:
     print(f"Error: {e}")
 
 finally:
-    # Ruta del repositorio local donde se almacenarán los archivos
-    output_folder = os.path.join(repo_path, subfolder_name)
     if coords:
         save_kml(coords)
     else:
         os.remove(fileName_gps)
-    guardar(repo_path, output_folder, baseFileName_arduino, fileName_gps, fileName_kml)
+    input("Presiona Enter para subir los archivos a GitHub...")
+    push_Git()
     ser_arduino.close()
     ser_gps.close()
     exit()

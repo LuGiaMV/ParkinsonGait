@@ -3,20 +3,9 @@ import subprocess
 import time
 
 def guardar(repo_path, output_folder, baseFileName_arduino, fileName_gps, fileName_kml):
-
-    # Crear la carpeta dentro del repositorio local
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-
+    
     # Mover los archivos generados al repositorio
     try:
-        # Mover archivos Arduino
-        for file in os.listdir("."):
-            if file.startswith(baseFileName_arduino) or file == fileName_gps or file == fileName_kml:
-                os.rename(file, os.path.join(output_folder, file))
-                print(f"Archivo {file} movido a {output_folder}")
-
-        # Cambiar al directorio del repositorio
         os.chdir(repo_path)
 
         # Ejecutar comandos de Git para agregar, confirmar y enviar los cambios
