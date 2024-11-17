@@ -22,7 +22,7 @@ kml = Kml()
 linea = kml.newlinestring(name="Ruta GPS")
 
 repo_path = "/home/user/Desktop/ParkinsonGait"          # Cambia esta ruta por el repositorio clonado localmente
-subfolder_name = time.strftime("%Y-%m-%d")                      # Carpeta con la fecha actual
+subfolder_name = time.strftime("Marcha %Y-%m-%d")                      # Carpeta con la fecha actual
 # Nombre base de los archivos y encabezados de columnas
 baseFileName_arduino = time.strftime("%Y-%m-%d_%H-%M-%S_arduino")
 fileName_gps = time.strftime("%Y-%m-%d_%H-%M-%S_gps.csv")
