@@ -13,11 +13,11 @@ for i, f in enumerate(dirs):
 carpeta = input("\nIngresa número de dia [Enter para seleccionar la última]: ")
 if carpeta == "":
     carpeta = dirs[-1]
-else:    
+else:
     carpeta = dirs[int(carpeta)-1]
 # print(carpeta)
 files = ["_".join(f.split("_")[0:2]) for f in os.listdir(carpeta) if f.endswith("_arduino_1.csv")]
-print(files)
+# print(files)
 if len(files) != 1:
     print("\nSelecciona una marcha")
     for i, f in enumerate(files):
@@ -30,16 +30,22 @@ if len(files) != 1:
 else:
     marcha = files[-1]
 # print(marcha)
-
 files = [f for f in os.listdir(carpeta) if f.startswith(marcha) and re.search(r"_arduino_\d.csv$", f)]
 # print(files)
-
-dfs = []
-for file in files:
-    df = pd.read_csv(os.path.join(carpeta, file))
-    dfs.append(df)
-data = pd.concat(dfs, ignore_index=True)
-# print(data.shape)
+print("\nSelecciona un segmento de marcha:")
+for i, f in enumerate(files):
+    print(f"{i+1}. {f}")
+seg = input("\nIngresa segmnto de marcha [Enter para seleccionar todos juntos]: ")
+if seg == "":
+    dfs = []
+    for file in files:
+        df = pd.read_csv(os.path.join(carpeta, file))
+        dfs.append(df)
+    data = pd.concat(dfs, ignore_index=True)
+    # print(data.shape)
+else:
+    seg = files[int(seg)-1]
+    data = pd.read_csv(os.path.join(carpeta, seg))
 
 data["Timestamp"] = pd.to_datetime(data["Timestamp"])  # convertir a formato de tiempo
 fig, axs = plt.subplots(6, 1, figsize=(15, 16))
