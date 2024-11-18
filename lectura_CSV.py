@@ -2,9 +2,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import re
-import time
 
-os.chdir("ParkinsonGait")
+if not os.path.basename(os.getcwd()) == "ParkinsonGait":
+    os.chdir("ParkinsonGait")
 dirs = [f for f in os.listdir() if os.path.isdir(f) and f.startswith("Marcha")]
 # print(dirs)
 print("\nSelecciona un dia:")
