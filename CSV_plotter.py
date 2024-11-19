@@ -3,8 +3,10 @@ import matplotlib.pyplot as plt
 import os
 import re
 
-if not os.path.basename(os.getcwd()) == "ParkinsonGait":
+if "ParkinsonGait" in os.listdir():
     os.chdir("ParkinsonGait")
+# if not os.path.basename(os.getcwd()) == "ParkinsonGait":
+#     os.chdir("ParkinsonGait")
 dirs = [f for f in os.listdir() if os.path.isdir(f) and f.startswith("Marcha")]
 # print(dirs)
 print("\nSelecciona un dia:")
