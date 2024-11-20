@@ -6,12 +6,12 @@ import subprocess
 from simplekml import Kml
 
 # Configuración de puertos y tasas de baudios
-arduino_port = "/dev/ttyACM0"  # Puerto serial del Arduino
-gps_port = "/dev/ttyACM1"  # Puerto serial del GPS
+gps_port = "/dev/ttyACM0"  # Puerto serial del GPS
+arduino_port = "/dev/ttyACM1"  # Puerto serial del Arduino
 baud_rate_gps = 4800
 baud_rate_arduino = 9600
 
-time_interval = 5
+time_interval = 1
 current_time = 0
 
 # Tamaño máximo del bloque de datos en bytes y contadores de archivos
