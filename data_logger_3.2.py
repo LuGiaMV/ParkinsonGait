@@ -6,8 +6,8 @@ import subprocess
 from simplekml import Kml
 
 # Configuración de puertos y tasas de baudios
-gps_port = "/dev/ttyACM0"  # Puerto serial del GPS
-arduino_port = "/dev/ttyACM1"  # Puerto serial del Arduino
+arduino_port = "/dev/ttyACM0"  # Puerto serial del Arduino
+gps_port = "/dev/ttyACM1"  # Puerto serial del GPS
 baud_rate_gps = 4800
 baud_rate_arduino = 9600
 
@@ -22,7 +22,7 @@ kml = Kml()
 linea = kml.newlinestring(name="Ruta GPS")
 
 repo_path = "/home/user/Desktop/ParkinsonGait"          # Cambia esta ruta por el repositorio clonado localmente
-subfolder_name = time.strftime("Marcha %Y-%m-%d")                      # Carpeta con la fecha actual
+subfolder_name = time.strftime("data/Marcha %Y-%m-%d")                      # Carpeta con la fecha actual
 output_folder = os.path.join(repo_path, subfolder_name)
 # Nombre base de los archivos y encabezados de columnas
 baseFileName_arduino = os.path.join(output_folder, time.strftime("%Y-%m-%d_%H-%M-%S_arduino"))
