@@ -5,6 +5,8 @@ import re
 
 if "ParkinsonGait" in os.listdir():
     os.chdir("ParkinsonGait")
+if "data" in os.listdir():
+    os.chdir("data")
 # if not os.path.basename(os.getcwd()) == "ParkinsonGait":
 #     os.chdir("ParkinsonGait")
 dirs = [f for f in os.listdir() if os.path.isdir(f) and f.startswith("Marcha")]
