@@ -42,6 +42,8 @@ labels_arduino = ["Timestamp", "xAcel_L", "yAcel_L", "zAcel_L", "xGyro_L", "yGyr
                   "xMag_L", "yMag_L", "zMag_L", "xAcel_R", "yAcel_R", "zAcel_R",
                   "xGyro_R", "yGyro_R", "zGyro_R", "xMag_R", "yMag_R", "zMag_R"]
 labels_gps = ["Timestamp", "Time", "latitude", "longitude", "fix_status"]
+arduino_database = []
+gps_database = []
 coords = []
 
 # Función para insertar datos en la base de datos
@@ -164,7 +166,8 @@ try:
                                 y_mag_r=float(data_parts[17]),
                                 z_mag_r=float(data_parts[18]),
                             )
-                            save_to_db(session, arduino_data, ArduinoData)
+                            arduino_database.append(arduino_data)
+                            # save_to_db(session, arduino_data, ArduinoData)
                             arduino_writer.writerow(data_parts)                                                    # Escribir en el archivo CSV
                             csvfile_arduino.flush()                                                                     # Forzar la escritura en disco
                             print(f"Datos Arduino recibidos: {data_parts}")
@@ -194,7 +197,8 @@ try:
                                         longitude=longitude,
                                         fix_status="Valid fix"
                                     )
-                                    save_to_db(session, gps_data, GPSData)
+                                    arduino_database.append(gps_data)
+                                    # save_to_db(session, gps_data, GPSData)
                                     gps_writer.writerow(lectura_gps)                                                    # Escribir en el archivo CSV
                                     csvfile_gps.flush()                                                                 # Forzar la escritura en disco
                                     print(f"Datos GPS recibidos: {lectura_gps}")                                        # Mostrar en consola
@@ -219,7 +223,9 @@ finally:
         save_kml(coords)
     else:
         os.remove(fileName_gps)
-    input("Presiona Enter para subir los archivos a GitHub...")
+    input("Presiona Enter para subir los archivos...")
+    save_to_db(session, arduino_database, ArduinoData)
+    save_to_db(session, gps_database, GPSData)
     push_Git()
     ser_arduino.close()
     ser_gps.close()
