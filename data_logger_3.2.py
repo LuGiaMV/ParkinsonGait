@@ -1,3 +1,6 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from models import Base, ArduinoData, GPSData
 import serial
 import time
 import csv
@@ -5,6 +8,13 @@ import os
 import subprocess
 from simplekml import Kml
 
+# Configuración de la base de datos PostgreSQL
+DATABASE_URL = "postgresql+psycopg2://postgres:ruyeJZhoonKcduSYQZidpOPxXWsDAZUg@junction.proxy.rlwy.net:51508/railway"  # Cambia con tus credenciales Railway
+engine = create_engine(DATABASE_URL)
+Session = sessionmaker(bind=engine)
+
+# Crear tablas si no existen
+Base.metadata.create_all(engine)
 # Configuración de puertos y tasas de baudios
 arduino_port = "/dev/ttyACM1"  # Puerto serial del Arduino
 gps_port = "/dev/ttyACM0"  # Puerto serial del GPS
@@ -33,6 +43,16 @@ labels_arduino = ["Timestamp", "xAcel_L", "yAcel_L", "zAcel_L", "xGyro_L", "yGyr
                   "xGyro_R", "yGyro_R", "zGyro_R", "xMag_R", "yMag_R", "zMag_R"]
 labels_gps = ["Timestamp", "Time", "latitude", "longitude", "fix_status"]
 coords = []
+
+# Función para insertar datos en la base de datos
+def save_to_db(session, data, model):
+    try:
+        session.add(data)
+        session.commit()
+        print(f"Datos guardados en {model.__tablename__}: {data}")
+    except Exception as e:
+        session.rollback()
+        print(f"Error al guardar datos en {model.__tablename__}: {e}")
 
 def convertir_grados_decimales(coord, direccion):
     # Separar grados y minutos
@@ -102,6 +122,7 @@ if not os.path.exists(subfolder_name):
     os.makedirs(subfolder_name)
 
 try:
+    session = Session()
     with open(fileName_gps, 'w', newline='') as csvfile_gps:
         gps_writer = csv.writer(csvfile_gps, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         gps_writer.writerow(labels_gps)
@@ -121,13 +142,35 @@ try:
                         if linea_arduino:
                             # Obtener la marca de tiempo y datos de Arduino
                             timestamp = time.strftime("%Y-%m-%d %H:%M:%S") + f".{int(time.time() * 1000) % 1000:03d}"
-                            lectura_arduino = [timestamp] + linea_arduino.split(",")
-                            arduino_writer.writerow(lectura_arduino)                                                    # Escribir en el archivo CSV
+                            data_parts = [timestamp] + linea_arduino.split(",")
+                            arduino_data = ArduinoData(
+                                timestamp=timestamp,
+                                x_acel_l=float(data_parts[0]),
+                                y_acel_l=float(data_parts[1]),
+                                z_acel_l=float(data_parts[2]),
+                                x_gyro_l=float(data_parts[3]),
+                                y_gyro_l=float(data_parts[4]),
+                                z_gyro_l=float(data_parts[5]),
+                                x_mag_l=float(data_parts[6]),
+                                y_mag_l=float(data_parts[7]),
+                                z_mag_l=float(data_parts[8]),
+                                x_acel_r=float(data_parts[9]),
+                                y_acel_r=float(data_parts[10]),
+                                z_acel_r=float(data_parts[11]),
+                                x_gyro_r=float(data_parts[12]),
+                                y_gyro_r=float(data_parts[13]),
+                                z_gyro_r=float(data_parts[14]),
+                                x_mag_r=float(data_parts[15]),
+                                y_mag_r=float(data_parts[16]),
+                                z_mag_r=float(data_parts[17]),
+                            )
+                            save_to_db(session, arduino_data, ArduinoData)
+                            arduino_writer.writerow(data_parts)                                                    # Escribir en el archivo CSV
                             csvfile_arduino.flush()                                                                     # Forzar la escritura en disco
-                            print(f"Datos Arduino recibidos: {lectura_arduino}")
+                            print(f"Datos Arduino recibidos: {data_parts}")
 
                     # Leer varias líneas del GPS para obtener datos completos
-                    if time.time() - current_time > time_interval:                                                      # Leer cada 5 segundos
+                    if time.time() - current_time > time_interval:                                                      # Leer cada 1 segundos
                         current_time = time.time()                                                                      # Actualizar el tiempo actual
                         while ser_gps.in_waiting > 0:                                                                   # Leer todas las líneas disponibles
                             gps_linea = ser_gps.readline().decode("utf-8").strip()
@@ -144,7 +187,14 @@ try:
                                     # Crear entrada para el archivo GPS solo con los datos relevantes
                                     timestamp_gps = time.strftime("%Y-%m-%d %H:%M:%S")                                  # Marca de tiempo actual
                                     lectura_gps = [timestamp_gps, gps_data["Time"], gps_data["lat_format"], gps_data["long_format"], gps_data["fix_status"]]    # Datos relevantes
-
+                                    gps_data = GPSData(
+                                        timestamp=timestamp_gps,
+                                        time=gps_data["Time"],
+                                        latitude=float(gps_data["lat_format"]),
+                                        longitude=float(gps_data["long_format"]),
+                                        fix_status="Valid fix"
+                                    )
+                                    save_to_db(session, gps_data, GPSData)
                                     gps_writer.writerow(lectura_gps)                                                    # Escribir en el archivo CSV
                                     csvfile_gps.flush()                                                                 # Forzar la escritura en disco
                                     print(f"Datos GPS recibidos: {lectura_gps}")                                        # Mostrar en consola
