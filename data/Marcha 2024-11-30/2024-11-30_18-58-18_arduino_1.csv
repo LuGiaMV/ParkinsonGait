@@ -1,0 +1,3 @@
+Timestamp,xAcel_L,yAcel_L,zAcel_L,xGyro_L,yGyro_L,zGyro_L,xMag_L,yMag_L,zMag_L,xAcel_R,yAcel_R,zAcel_R,xGyro_R,yGyro_R,zGyro_R,xMag_R,yMag_R,zMag_R
+-0.60,-0.15,0.76,2.14,0.06,0.61,-7.08,-9.23,11.71,-0.45,-0.76,0.50,4.39,1.28,0.73,22.39,12.18,27.81
+-0.60,-0.15,0.75,2.20,-0.18,0.61,-6.70,-9.23,11.83,-0.45,-0.76,0.50,4.46,1.04,0.67,22.81,11.94,27.50

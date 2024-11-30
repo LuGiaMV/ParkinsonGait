@@ -16,8 +16,8 @@ Session = sessionmaker(bind=engine)
 # Crear tablas si no existen
 Base.metadata.create_all(engine)
 # Configuración de puertos y tasas de baudios
-arduino_port = "/dev/ttyACM1"  # Puerto serial del Arduino
-gps_port = "/dev/ttyACM0"  # Puerto serial del GPS
+arduino_port = "/dev/ttyACM0"  # Puerto serial del Arduino
+gps_port = "/dev/ttyACM1"  # Puerto serial del GPS
 baud_rate_gps = 4800
 baud_rate_arduino = 9600
 
@@ -142,7 +142,7 @@ try:
                         if linea_arduino:
                             # Obtener la marca de tiempo y datos de Arduino
                             timestamp = time.strftime("%Y-%m-%d %H:%M:%S") + f".{int(time.time() * 1000) % 1000:03d}"
-                            data_parts = [timestamp] + linea_arduino.split(",")
+                            data_parts = linea_arduino.split(",")
                             arduino_data = ArduinoData(
                                 timestamp=timestamp,
                                 x_acel_l=float(data_parts[0]),
@@ -177,21 +177,20 @@ try:
                             if gps_linea.startswith("$GPGGA"):                                                          # Procesar $GPGGA para obtener latitud y longitud
                                 gps_parts = gps_linea.split(",")
                                 if gps_parts[6] == "1":
-                                    gps_data["Time"] = gps_parts[1] if gps_parts[1] else ""                             # Hora en formato HHMMSS
-                                    gps_data["fix_status"] = "Valid fix" if gps_parts[6] == "1" else "No fix"           # Estado de la señal GPS
+                                    tiempo = gps_parts[1] if gps_parts[1] else ""                             # Hora en formato HHMMSS
 
-                                    gps_data["lat_format"] = convertir_grados_decimales(gps_parts[2], gps_parts[3])     # Convertir de grado-minuto a decimal
-                                    gps_data["long_format"] = convertir_grados_decimales(gps_parts[4], gps_parts[5])    # Convertir de grado-minuto a decimal
+                                    latitude = convertir_grados_decimales(gps_parts[2], gps_parts[3])     # Convertir de grado-minuto a decimal
+                                    longitude = convertir_grados_decimales(gps_parts[4], gps_parts[5])    # Convertir de grado-minuto a decimal
                                     coords.append((gps_data["long_format"], gps_data["lat_format"]))                    # Guardar coordenadas para KML
 
                                     # Crear entrada para el archivo GPS solo con los datos relevantes
                                     timestamp_gps = time.strftime("%Y-%m-%d %H:%M:%S")                                  # Marca de tiempo actual
-                                    lectura_gps = [timestamp_gps, gps_data["Time"], gps_data["lat_format"], gps_data["long_format"], gps_data["fix_status"]]    # Datos relevantes
+                                    lectura_gps = [timestamp_gps, tiempo, latitude, longitude, "Valid fix"]    # Datos relevantes
                                     gps_data = GPSData(
                                         timestamp=timestamp_gps,
-                                        time=gps_data["Time"],
-                                        latitude=float(gps_data["lat_format"]),
-                                        longitude=float(gps_data["long_format"]),
+                                        time=tiempo,
+                                        latitude=float(latitude),
+                                        longitude=float(longitude),
                                         fix_status="Valid fix"
                                     )
                                     save_to_db(session, gps_data, GPSData)

@@ -7,7 +7,7 @@ Base = declarative_base()
 class ArduinoData(Base):
     __tablename__ = 'arduino_data'
     id = Column(Integer, primary_key=True)
-    timestamp = Column(TIMESTAMP(precision=3))  # Precisión de milisegundos
+    timestamp = Column(String)  # Precisión de milisegundos
     x_acel_l = Column(Float)
     y_acel_l = Column(Float)
     z_acel_l = Column(Float)

@@ -4,3 +4,5 @@ asyncio
 bleak
 pyserial
 simplekml
+sqlalchemy
+psycopg2
