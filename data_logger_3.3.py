@@ -49,9 +49,10 @@ coords = []
 # Función para insertar datos en la base de datos
 def save_to_db(session, data, model):
     try:
-        session.add(data)
-        session.commit()
-        print(f"Datos guardados en {model.__tablename__}: {data}")
+        for item in data:
+            session.add(item)
+            session.commit()
+            print(f"Datos guardados en {model.__tablename__}: {item}")
     except Exception as e:
         session.rollback()
         print(f"Error al guardar datos en {model.__tablename__}: {e}")
@@ -226,7 +227,7 @@ finally:
     input("Presiona Enter para subir los archivos...")
     save_to_db(session, arduino_database, ArduinoData)
     save_to_db(session, gps_database, GPSData)
-    push_Git()
+#     push_Git()
     ser_arduino.close()
     ser_gps.close()
     exit()
