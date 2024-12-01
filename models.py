@@ -30,7 +30,7 @@ class ArduinoData(Base):
 class GPSData(Base):
     __tablename__ = 'gps_data'
     id = Column(Integer, primary_key=True)
-    timestamp = Column(TIMESTAMP(precision=3))  # Precisión de milisegundos
+    timestamp = Column(String)  # Precisión de milisegundos
     time = Column(String)
     latitude = Column(Float)
     longitude = Column(Float)
