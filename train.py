@@ -97,6 +97,8 @@ query = """
 cur.execute(query)  # Prevenir inyección SQL
 data = cur.fetchall()
 
+# print(data)
+
 # Obtener los nombres de las columnas
 column_names = [desc[0] for desc in cur.description]
 
@@ -106,19 +108,18 @@ df = pd.DataFrame(data, columns=column_names)
 # Renombrar columna 'timestamp' a 'date'
 df.rename(columns={'timestamp': 'date'}, inplace=True)
 df['date_atemp'] = range(1, len(df) + 1)
-
 # Convertir las primeras filas del DataFrame a diccionario
 result = df.to_dict(orient='records')
 
 data_point = 'z_acel_l'
 processed_data = result
 
-data = processed_data.get("data") if isinstance(processed_data, dict) else None
-if not data:
-    raise ValueError("No se encontraron datos válidos en 'processed_data'.")
+# print(result)
+
+# data = processed_data.get("data") if isinstance(processed_data, dict) else None
 
 # Crea un DataFrame (si 'data' contiene registros)
-df = pd.DataFrame(data)
+df = pd.DataFrame(processed_data)
 df.rename(columns={'timestamp': 'date'}, inplace=True)
 df['date_atemp'] = range(1, len(df) + 1)
 df = df.dropna()
