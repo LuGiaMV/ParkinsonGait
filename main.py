@@ -15,8 +15,6 @@ import psycopg2
 from datetime import datetime
 
 app = Flask(__name__)
-
-"""
 # Configuración de la conexión a la base de datos
 DB_CONFIG = {
     "host": "junction.proxy.rlwy.net",
@@ -25,16 +23,6 @@ DB_CONFIG = {
     "password": "ruyeJZhoonKcduSYQZidpOPxXWsDAZUg",
     "dbname": "railway",
 }
-"""
-
-DB_CONFIG = {
-    "host": os.environ.get("DB_HOST", "default_host"),
-    "port": os.environ.get("DB_PORT", "default_port"),
-    "user": os.environ.get("DB_USER", "default_user"),
-    "password": os.environ.get("DB_PASSWORD", "default_password"),
-    "dbname": os.environ.get("DB_NAME", "default_dbname"),
-}
-
 
 def get_db_connection():
     """Establecer conexión con la base de datos PostgreSQL."""
