@@ -8,13 +8,6 @@ import os
 import subprocess
 from simplekml import Kml
 
-# Configuración de la base de datos PostgreSQL
-DATABASE_URL = "postgresql+psycopg2://postgres:ruyeJZhoonKcduSYQZidpOPxXWsDAZUg@junction.proxy.rlwy.net:51508/railway"  # Cambia con tus credenciales Railway
-engine = create_engine(DATABASE_URL)
-Session = sessionmaker(bind=engine)
-
-# Crear tablas si no existen
-Base.metadata.create_all(engine)
 # Configuración de puertos y tasas de baudios
 arduino_port = "/dev/ttyACM0"  # Puerto serial del Arduino
 gps_port = "/dev/ttyACM1"  # Puerto serial del GPS
@@ -33,7 +26,16 @@ arduino_database = []
 gps_database = []
 
 # Función para insertar datos en la base de datos
-def save_to_db(session, data, model):
+def save_to_db(data, model):
+    
+    # Configuración de la base de datos PostgreSQL
+    DATABASE_URL = "postgresql+psycopg2://postgres:ruyeJZhoonKcduSYQZidpOPxXWsDAZUg@junction.proxy.rlwy.net:51508/railway"  # Cambia con tus credenciales Railway
+    engine = create_engine(DATABASE_URL)
+    Session = sessionmaker(bind=engine)
+
+    # Crear tablas si no existen
+    Base.metadata.create_all(engine)
+    session = Session()
     try:
         for item in data:
             session.add(item)
@@ -81,7 +83,6 @@ except serial.SerialException:
 gps_data = {"Time": "", "lat_format": "", "long_format": "", "fix_status": ""}
 
 try:
-    session = Session()
     while True:
         # Leer datos de Arduino y escribir en archivo correspondiente
         if ser_arduino.in_waiting > 0:
@@ -153,8 +154,8 @@ except Exception as e:
 
 finally:
     input("Presiona Enter para subir los archivos...")
-    save_to_db(session, arduino_database, ArduinoData)
-    save_to_db(session, gps_database, GPSData)
+    save_to_db(arduino_database, ArduinoData)
+    save_to_db(gps_database, GPSData)
 #     push_Git()
     ser_arduino.close()
     ser_gps.close()
