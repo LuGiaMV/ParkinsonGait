@@ -2,44 +2,58 @@ import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine
 from datetime import datetime, timedelta
-import webbrowser
 import pywhatkit as kit
 
 # Conexión a la base de datos PostgreSQL
 DATABASE_URL = "postgresql+psycopg2://postgres:ruyeJZhoonKcduSYQZidpOPxXWsDAZUg@junction.proxy.rlwy.net:51508/railway"
 engine = create_engine(DATABASE_URL)
-"""
-def send_whatsapp_message(phone_number, message):
-        base_url = "https://api.whatsapp.com/send/"
-        url = f"{base_url}?phone={phone_number}&text={message}"
-        webbrowser.open(url)
-"""
 
-def send_whatsapp_message(phone_number, message):
-    # Parámetros: número (incluido el '+'), mensaje, hora de envío (HH, MM)
-    kit.sendwhatmsg(phone_number, message, 15, 30)  # Enviará el mensaje a las 15:30
-
+# Función para enviar mensajes de WhatsApp
 def send_whatsapp_message_now(phone_number, message):
-    # Obtiene la hora actual
-    now = datetime.now()
+    # Obtiene la hora actual y agrega 2 minutos para evitar problemas de carga
+    now = datetime.now() + timedelta(minutes=2)
     hour = now.hour
-    minute = now.minute + 1  # Programar para el minuto siguiente
+    minute = now.minute
 
     # Enviar el mensaje
-    kit.sendwhatmsg(phone_number, message, hour, minute)
+    try:
+        kit.sendwhatmsg(phone_number, message, hour, minute)
+        print(f"Mensaje programado para {hour}:{minute}.")
+    except Exception as e:
+        print(f"Error al enviar el mensaje: {e}")
+    
+# Función para generar el mensaje de WhatsApp basado en las anomalías detectadas
+def generate_whatsapp_message(anomalies_with_gps):
+    """
+    Genera un mensaje con los detalles de las anomalías detectadas.
+    """
+    message = "⚠️ *Posibles caidas detectadas:* ⚠️\n\n"
+    for _, row in anomalies_with_gps.iterrows():
+        message += (
+            f"📍 *Posible Caida*\n"
+            f"   - Tiempo: {row['anomaly_time']}\n"
+            f"   - Valor: {row['anomaly_value']}\n"
+            f"   - Coordenadas: {row['latitude']}, {row['longitude']}\n\n"
+        )
+    return message.strip()
 
-# Función para cargar datos de la base de datos
-def fetch_data_from_db(table_name):
-    query = f"SELECT * FROM {table_name}"
+# Función para cargar datos de la base de datos desde una fecha específica
+def fetch_data_from_db(table_name, start_date):
+    query = f"""
+        SELECT *
+        FROM {table_name}
+        WHERE timestamp >= '{start_date}'
+    """
     with engine.connect() as conn:
         return pd.read_sql(query, conn)
 
 # Detectar valores atípicos en una columna
-def detect_anomalies(data, column, threshold=3):
-    """Detectar valores atípicos en una columna usando desviaciones estándar."""
-    mean = data[column].mean()
-    std_dev = data[column].std()
-    anomalies = data[np.abs(data[column] - mean) > threshold * std_dev]
+def detect_anomalies(data, column, upper_threshold=2, lower_threshold=-2):
+    """
+    Detectar valores atípicos en una columna basados en un rango.
+    Considera como atípico cualquier valor mayor al umbral superior o menor al umbral inferior.
+    """
+    anomalies = data[(data[column] > upper_threshold) | (data[column] < lower_threshold)]
     return anomalies
 
 # Asociar anomalías con coordenadas GPS
@@ -77,27 +91,27 @@ def map_anomalies_to_gps(anomalies, gps_data, time_column="timestamp"):
 
 # Flujo Principal
 if __name__ == "__main__":
-    # Cargar datos de la base de datos
-    arduino_data = fetch_data_from_db("arduino_data")
-    gps_data = fetch_data_from_db("gps_data")
+    # Establecer la fecha de inicio (2024-12-02)
+    start_date = "2024-12-02"
 
-    # Detectar anomalías en la columna z_acel_l
-    anomalies = detect_anomalies(arduino_data, column="z_acel_l")
+    # Cargar datos de la base de datos desde la fecha específica
+    arduino_data = fetch_data_from_db("arduino_data", start_date)
+    gps_data = fetch_data_from_db("gps_data", start_date)
+
+    # Detectar anomalías en la columna z_acel_l usando el umbral personalizado
+    anomalies = detect_anomalies(arduino_data, column="z_acel_l", upper_threshold=2, lower_threshold=-2)
 
     if not anomalies.empty:
         print(f"Anomalías detectadas:\n{anomalies[['timestamp', 'z_acel_l']]}")
-        
+
         # Mapear las anomalías a las posiciones GPS
         anomaly_gps_mapping = map_anomalies_to_gps(anomalies, gps_data)
         print(f"Mapa de anomalías con GPS:\n{anomaly_gps_mapping}")
 
-        """
-        # Ejemplo de uso
-        phone_number = "+56951977208"  # Número de WhatsApp
-        message = "Hola"  # Mensaje
-        send_whatsapp_message(phone_number, message)
-        """
+        # Generar mensaje de WhatsApp
+        message = generate_whatsapp_message(anomaly_gps_mapping)
+        print(f"Mensaje a enviar por WhatsApp:\n{message}")
 
-        phone_number = "+56951977208"  # Incluye el '+'
-        message = "Se ha detectado una anomalía"
+        # Enviar una notificación por WhatsApp
+        phone_number = "+56979599627"  # Incluye el '+'
         send_whatsapp_message_now(phone_number, message)
